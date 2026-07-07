@@ -6,14 +6,14 @@ import {
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Category } from './schemas/category.schema';
+import { Category, CategoryDocument } from './schemas/category.schema';
 import { isValidObjectId, Model } from 'mongoose';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectModel(Category.name)
-    private readonly categoryModel: Model<Category>,
+    private readonly categoryModel: Model<CategoryDocument>,
   ) {}
 
   findAll() {

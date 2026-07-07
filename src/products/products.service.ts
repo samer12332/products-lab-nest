@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Product } from './schemas/product.schema';
+import { Product, ProductDocument } from './schemas/product.schema';
 import { isValidObjectId, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
@@ -13,7 +13,7 @@ import { InjectModel } from '@nestjs/mongoose';
 export class ProductsService {
   constructor(
     @InjectModel(Product.name)
-    private readonly productModel: Model<Product>,
+    private readonly productModel: Model<ProductDocument>,
   ) {}
 
   findAll() {
