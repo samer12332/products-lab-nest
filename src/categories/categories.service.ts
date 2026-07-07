@@ -1,20 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Category } from './schemas/category.schema';
+import { isValidObjectId, Model } from 'mongoose';
 
 @Injectable()
 export class CategoriesService {
-  private categories = [
-    { id: 1, name: 'Electronics' },
-    { id: 2, name: 'Clothes' },
-  ];
+  constructor(
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<Category>,
+  ) {}
 
   findAll() {
-    return this.categories;
+    return this.categoryModel.find().exec();
   }
 
-  findOne(id: number) {
-    const category = this.categories.find((category) => category.id === id);
+  async findOne(id: string) {
+    this.validateObjectId(id);
+
+    const category = await this.categoryModel.findById(id).exec();
 
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -24,29 +33,40 @@ export class CategoriesService {
   }
 
   create(createCategoryDto: CreateCategoryDto) {
-    const newCategory = {
-      id: this.categories.length + 1,
-      ...createCategoryDto,
-    };
-
-    this.categories.push(newCategory);
-
-    return newCategory;
+    return this.categoryModel.create(createCategoryDto);
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    const category = this.findOne(id);
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+    this.validateObjectId(id);
+    const category = await this.categoryModel
+      .findByIdAndUpdate(id, updateCategoryDto, {
+        new: true,
+        runValidators: true,
+      })
+      .exec();
 
-    Object.assign(category, updateCategoryDto);
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
 
     return category;
   }
 
-  remove(id: number) {
-    const category = this.findOne(id);
+  async remove(id: string) {
+    this.validateObjectId(id);
 
-    this.categories = this.categories.filter((category) => category.id !== id);
+    const category = await this.categoryModel.findByIdAndDelete(id).exec();
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
 
     return category;
+  }
+
+  private validateObjectId(id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid category id');
+    }
   }
 }

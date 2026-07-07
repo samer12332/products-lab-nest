@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -20,8 +21,6 @@ export class UpdateProductDto {
   price?: number;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @IsPositive()
-  categoryId?: number;
+  @IsMongoId()
+  categoryId?: string;
 }

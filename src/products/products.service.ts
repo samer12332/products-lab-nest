@@ -1,20 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { Product } from './schemas/product.schema';
+import { isValidObjectId, Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class ProductsService {
-  private products = [
-    { id: 1, name: 'Laptop', price: 25000, categoryId: 1 },
-    { id: 2, name: 'T-Shirt', price: 300, categoryId: 2 },
-  ];
+  constructor(
+    @InjectModel(Product.name)
+    private readonly productModel: Model<Product>,
+  ) {}
 
   findAll() {
-    return this.products;
+    return this.productModel.find().exec();
   }
 
-  findOne(id: number) {
-    const product = this.products.find((product) => product.id === id);
+  async findOne(id: string) {
+    this.validateObjectId(id);
+
+    const product = await this.productModel.findById(id).exec();
 
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -24,29 +33,40 @@ export class ProductsService {
   }
 
   create(createProductDto: CreateProductDto) {
-    const newProduct = {
-      id: this.products.length + 1,
-      ...createProductDto,
-    };
-
-    this.products.push(newProduct);
-
-    return newProduct;
+    return this.productModel.create(createProductDto);
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    const product = this.findOne(id);
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    this.validateObjectId(id);
+    const product = await this.productModel
+      .findByIdAndUpdate(id, updateProductDto, {
+        new: true,
+        runValidators: true,
+      })
+      .exec();
 
-    Object.assign(product, updateProductDto);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
 
     return product;
   }
 
-  remove(id: number) {
-    const product = this.findOne(id);
+  async remove(id: string) {
+    this.validateObjectId(id);
 
-    this.products = this.products.filter((product) => product.id !== id);
+    const product = await this.productModel.findByIdAndDelete(id).exec();
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
 
     return product;
+  }
+
+  private validateObjectId(id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid product id');
+    }
   }
 }

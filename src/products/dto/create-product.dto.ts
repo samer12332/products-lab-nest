@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsPositive, IsString } from 'class-validator';
+import {
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -11,8 +17,6 @@ export class CreateProductDto {
   @IsPositive()
   price!: number;
 
-  @Type(() => Number)
-  @IsNumber()
-  @IsPositive()
-  categoryId!: number;
+  @IsMongoId()
+  categoryId!: string;
 }
